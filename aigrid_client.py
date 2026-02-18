@@ -1,8 +1,11 @@
-# aigrid_client.py
+# stage_client.py
+# Python 2.7
+
 import socket
 import json
 
-class AIGRIDClient(object):
+
+class StageClient(object):
 
     def __init__(self, host="127.0.0.1", port=9999):
         self.host = host
@@ -12,7 +15,7 @@ class AIGRIDClient(object):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((self.host, self.port))
         s.send(json.dumps(payload))
-        response = json.loads(s.recv(4096))
+        response = json.loads(s.recv(4096).strip())
         s.close()
         return response
 
@@ -30,12 +33,6 @@ class AIGRIDClient(object):
 
     def get_position(self):
         return self._send({"action": "get_position"})
-
-    def log_data(self, x, y, duration):
-        return self._send({"action": "log_data", "x": x, "y": y, "duration": duration})
-
-    def increment_time(self, base_time, index):
-        return self._send({"action": "increment_time", "base_time": base_time, "index": index})
 
     def disconnect(self):
         return self._send({"action": "disconnect"})

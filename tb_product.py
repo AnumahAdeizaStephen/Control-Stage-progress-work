@@ -21,12 +21,13 @@
 # Initialization ================================
 # ===============================================
 
-import sys, os
+from system_registers import *
+import sys
+import os
 import time
 
 sys.path.append(os.getcwd() + '\\scripts\\GDS-100\\')
-from system_registers import *
-from __main__ import tb
+tb = None
 
 
 # ===============================================
@@ -71,7 +72,8 @@ def triggerAllSpecial(setting, asic_id):
 # output: None.
 # -------------------------------------------------
 def triggerEnableNormal(channel, asic_id):
-    tb.setAsicConfigBitFieldByAddr(bitaddr_trigger_dis_ch0 + channel, 0, asic_id)
+    tb.setAsicConfigBitFieldByAddr(
+        bitaddr_trigger_dis_ch0 + channel, 0, asic_id)
 
 
 # triggerEnableSpecial -------------------------
@@ -83,7 +85,8 @@ def triggerEnableNormal(channel, asic_id):
 # output: None.
 # -------------------------------------------------
 def triggerEnableSpecial(channel, asic_id):
-    tb.setAsicConfigBitFieldByAddr(bitaddr_trigger_dis_cat0 + channel, 0, asic_id)
+    tb.setAsicConfigBitFieldByAddr(
+        bitaddr_trigger_dis_cat0 + channel, 0, asic_id)
 
 
 # enableForcedSpecial -------------------------------
@@ -93,7 +96,8 @@ def triggerEnableSpecial(channel, asic_id):
 # input[0]: channel, [0,1].
 # input[1]: asic_id, [0,1,2,3].
 def enableForcedSpecial(channel, asic_id):
-    tb.setAsicConfigBitFieldByAddr(bitaddr_forced_readout_cat0 + channel, 1, asic_id)
+    tb.setAsicConfigBitFieldByAddr(
+        bitaddr_forced_readout_cat0 + channel, 1, asic_id)
 
 # forcedAllSpecial -----------------------------------
 
@@ -105,13 +109,17 @@ def enableForcedSpecial(channel, asic_id):
 # input[1]: asic_id, [0,1,2,3]
 # Output: None.
 # -------------------------------------------------
+
+
 def forcedAllSpecial(setting, asic_id):
-    tb.setAsicConfigBitFieldByAddr(bitaddr_forced_readout_cat0, setting, asic_id)
-    tb.setAsicConfigBitFieldByAddr(bitaddr_forced_readout_cat1, setting, asic_id)
+    tb.setAsicConfigBitFieldByAddr(
+        bitaddr_forced_readout_cat0, setting, asic_id)
+    tb.setAsicConfigBitFieldByAddr(
+        bitaddr_forced_readout_cat1, setting, asic_id)
 
 # testOn ----------------------------------------
 
-# Turns test enable off for all channels except the 
+# Turns test enable off for all channels except the
 # chosen channel which is turned on.
 # Enables the trigger for the chosen channel
 # -------------------------------------------------
@@ -119,14 +127,18 @@ def forcedAllSpecial(setting, asic_id):
 # input[1]: asic_id, [0,1,2,3].
 # output: None.
 # -------------------------------------------------
+
+
 def testOn(channel, asic_id):
     tb.setAsicConfigBitFieldByAddr(bitaddr_test_on, 1, asic_id)
 
     for addr in range(bitaddr_test_enable_ch0, bitaddr_test_enable_ch127 + 1):
         tb.setAsicConfigBitFieldByAddr(addr, 0, asic_id)
 
-    tb.setAsicConfigBitFieldByAddr(bitaddr_test_enable_ch0 + channel, 1, asic_id)
-    tb.setAsicConfigBitFieldByAddr(bitaddr_trigger_dis_ch0 + channel, 0, asic_id)
+    tb.setAsicConfigBitFieldByAddr(
+        bitaddr_test_enable_ch0 + channel, 1, asic_id)
+    tb.setAsicConfigBitFieldByAddr(
+        bitaddr_trigger_dis_ch0 + channel, 0, asic_id)
 
 
 # readoutEnableList ---------------------------------
@@ -207,7 +219,7 @@ def setHV(voltage_dac, step=50, step_delay=0.5):
 
 # createLogFile -----------------------------------
 
-# Creates new log file and enables logging. 
+# Creates new log file and enables logging.
 # -------------------------------------------------
 # input[0]: datalog_filename, name for new logfile(.bin) with path.
 # Output: None.
@@ -217,3 +229,8 @@ def createLogFile(datalog_filename):
     tb.newDataLogFile(datalog_filename)
     tb.enableDataLogging(True)
     print('Now logging to: ' + datalog_filename)
+
+
+def set_tb(tb_instance):
+    global tb
+    tb = tb_instance
