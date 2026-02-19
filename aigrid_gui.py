@@ -1,18 +1,20 @@
 # aigrid_gui.py
 # Python 2.7 (inside IDEAS)
 
+from fileinput import filename
+
+from aigrid_client import StageClient
+import tb_product
 import sys
 import Tkinter as tk
 import time
 import os
-sys.path.append(r"C:\Users\Localadmin_adeizaan\Desktop\Test_bench\IDEASTestbench_V1_6_4_1\scripts\GDS-100") 
-from aigrid_client import StageClient 
-import tb_product
+sys.path.append(
+    r"C:\Users\Localadmin_adeizaan\Desktop\Test_bench\IDEASTestbench_V1_6_4_1\scripts\GDS-100")
 
 # Ensure sys.argv exists for IDEAS
 if not hasattr(sys, 'argv'):
     sys.argv = ['']
-
 
 
 class XYStepper:
@@ -49,6 +51,9 @@ class XYStepper:
         pady = 5
 
         # ----------- Row 0: Connection & Home -----------
+        tk.Button(self.root, text="Connect", width=15,
+                  command=self.connect_stages).grid(row=0, column=1, padx=padx, pady=pady)
+
         tk.Button(self.root, text="Home Stages", width=15,
                   command=self.home_stages).grid(row=0, column=0, padx=padx, pady=pady)
         tk.Button(self.root, text="Disconnect", width=15,
@@ -166,7 +171,9 @@ class XYStepper:
     # Stage control functions
     # -----------------------
     def connect_stages(self):
-        return self.client.connect("COM3")
+        response = self.client.connect("COM3")
+        self.update_status("Connected", "green")
+        print(response)
 
     def home_stages(self):
         self.update_status("Homing...", "orange")
@@ -183,8 +190,13 @@ class XYStepper:
 
     def run_detection_only(self):
         self.update_status("Running detector...", "blue")
-        self.client.log_data(self.cx, self.cy, self.detection_time)
-        self.update_status("Single scan complete", "green")
+
+        x, y = self.cx, self.cy
+        duration = self.detection_time
+
+        self.log_data_nonblocking(x, y, duration, 0)
+
+        self.update_status("Single scan running", "green")
 
     def start_movement(self):
         self.stop_requested = False
@@ -264,26 +276,25 @@ class XYStepper:
         self.log_data_nonblocking(x, y, duration, step_index)
 
     def log_data_nonblocking(self, x, y, duration, step_index):
-        """Non-blocking logging using after()"""
+
         if not os.path.exists('logs'):
             os.makedirs('logs')
 
         timestamp = time.strftime("%Y-%m-%d__%H_%M_%S")
         filename = 'logs/scan_x{:.3f}_y{:.3f}_{}.bin'.format(x, y, timestamp)
 
-        tb.newDataLogFile(filename)
-        tb.enableDataLogging(True)
+        tb_product.createLogFile(filename)
+
         self.status_label.config(text="Status: Detector ON", fg="blue")
         print("Detector ON at X={:.3f}, Y={:.3f} for {:.1f}s".format(
             x, y, duration))
 
-        self.root.after(int(duration*1000),
+        self.root.after(int(duration * 1000),
                         lambda: self.finish_logging(x, y, step_index))
 
     def finish_logging(self, x, y, step_index):
-        tb.enableDataLogging(False)
+        tb_product.tb.enableDataLogging(False)
         self.status_label.config(text="Status: Detector OFF", fg="green")
-        print("Detector OFF at X={:.3f}, Y={:.3f}".format(x, y))
         self.root.after(500, lambda: self.perform_step(step_index))
 
     def set_speed(self):

@@ -15,9 +15,9 @@ class StageClient(object):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((self.host, self.port))
         s.send(json.dumps(payload))
-        response = json.loads(s.recv(4096).strip())
+        data = s.recv(4096)
         s.close()
-        return response
+        return json.loads(data)
 
     def connect(self, com_port="COM3"):
         return self._send({"action": "connect", "com_port": com_port})
