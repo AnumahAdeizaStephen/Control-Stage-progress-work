@@ -1,6 +1,8 @@
 # aigrid_gui.py
 # Python 2.7 (inside IDEAS)
 
+from aigrid_client import StageClient
+import tb_product
 from fileinput import filename
 import sys
 import Tkinter as tk
@@ -9,8 +11,6 @@ import os
 sys.path.append(
     r"C:\Users\Localadmin_adeizaan\Desktop\Test_bench\IDEASTestbench_V1_6_4_1\scripts\GDS-100")
 
-import tb_product
-from aigrid_client import StageClient
 
 # Ensure sys.argv exists for IDEAS
 if not hasattr(sys, 'argv'):
@@ -37,6 +37,7 @@ class XYStepper:
         self.speed = 10.0
         self.decay_constant = 1.0  # Used if incrementing detection time
         self.snake_running = False
+        self.max_steps = 100.0
 
         # Build the UI
         self.init_ui()
@@ -184,6 +185,13 @@ class XYStepper:
         self.update_status("Homed", "green")
 
     def move_to_position(self):
+        if self.cx < 0 or self.cx > self.max_steps:
+            self.update_status("X exceeds 100 mm limit", "red")
+            return
+
+        if self.cy < 0 or self.cy > self.max_steps:
+            self.update_status("Y exceeds 100 mm limit", "red")
+            return
         self.update_status("Moving...", "orange")
         self.client.move_absolute(self.cx, self.cy)
         self.update_positions()
@@ -208,40 +216,55 @@ class XYStepper:
         self.perform_step(0)
 
     def perform_step(self, step_index):
-        """Perform one step in snake pattern"""
+
         if self.stop_requested:
-            self.status_label.config(text="Status: Stopped", fg="red")
+            self.update_status("Stopped", "red")
             return
 
         if self.paused:
             self.pending_action = lambda: self.perform_step(step_index)
             return
 
-        max_distance = self.grid_size
-        row = int(self.cy)
+        N = self.grid_size + 1
+        max_steps = self.max_steps
 
-        # Snake pattern: even rows → right, odd rows → left
-        if row % 2 == 0:
-            if self.cx < max_distance:
-                self.cx += 1
-            elif self.cy < max_distance:
-                self.cy += 1
-        else:
-            if self.cx > 0:
-                self.cx -= 1
-            elif self.cy < max_distance:
-                self.cy += 1
-            else:
-                self.status_label.config(
-                    text="Status: Scan complete", fg="green")
-                return
+        if step_index >= N * N:
+            self.update_status("Scan complete", "green")
+            self.snake_running = False
+            return
 
-        # Move stage
-        self.client.move_absolute(self.cx, self.cy)
+        row = step_index // N
+        col = step_index % N
+
+        # Reverse direction on odd rows
+        if row % 2 == 1:
+            col = N - 1 - col
+
+        start_x = float(self.entry_cx.get())
+        start_y = float(self.entry_cy.get())
+
+        target_x = start_x + col
+        target_y = start_y + row
+
+        if target_x < 0 or target_x > self.max_steps:
+            self.update_status("X limit reached (100 mm)", "red")
+            self.snake_running = False
+            return
+
+        if target_y < 0 or target_y > self.max_steps:
+            self.update_status("Y limit reached (100 mm)", "red")
+            self.snake_running = False
+            return
+
+        # Move stage using TCP client
+        self.client.move_absolute(target_x, target_y)
+
+        self.cx = target_x
+        self.cy = target_y
 
         self.update_positions()
 
-        # Start detector for this step
+        # Start detector after small settle delay
         self.root.after(500, lambda: self.start_detector(step_index))
 
     def stop_movement(self):
