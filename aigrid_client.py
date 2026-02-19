@@ -36,3 +36,7 @@ class StageClient(object):
 
     def disconnect(self):
         return self._send({"action": "disconnect"})
+
+    def set_speed(self, speed):
+        """Send speed setting to server"""
+        return self._send({"action": "set_speed", "speed": speed})
