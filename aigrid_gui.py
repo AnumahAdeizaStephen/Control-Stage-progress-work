@@ -1,6 +1,8 @@
 # aigrid_gui.py
 # Python 2.7 (inside IDEAS)
 
+import tb_product
+from aigrid_client import StageClient
 from fileinput import filename
 import sys
 import Tkinter as tk
@@ -9,8 +11,6 @@ import os
 sys.path.append(
     r"C:\Users\Localadmin_adeizaan\Desktop\Test_bench\IDEASTestbench_V1_6_4_1\scripts\GDS-100")
 
-from aigrid_client import StageClient
-import tb_product
 
 # Ensure sys.argv exists for IDEAS
 if not hasattr(sys, 'argv'):
@@ -283,19 +283,31 @@ class XYStepper:
         timestamp = time.strftime("%Y-%m-%d__%H_%M_%S")
         filename = 'logs/scan_x{:.3f}_y{:.3f}_{}.bin'.format(x, y, timestamp)
 
-        tb_product.createLogFile(filename)
+        # EXACT same flow as original working code
+        tb_product.tb.newDataLogFile(filename)
+        tb_product.tb.enableDataLogging(True)
+
+        print('Detector On.')
+        print('Started data recording at (x={}, y={}).'.format(x, y))
 
         self.status_label.config(text="Status: Detector ON", fg="blue")
-        print("Detector ON at X={:.3f}, Y={:.3f} for {:.1f}s".format(
-            x, y, duration))
 
+        # Schedule stop after duration
         self.root.after(int(duration * 1000),
                         lambda: self.finish_logging(x, y, step_index))
 
     def finish_logging(self, x, y, step_index):
+
         tb_product.tb.enableDataLogging(False)
+
+        print('Stopped data recording at (x={}, y={})'.format(x, y))
+        print('Detector Off.')
+
         self.status_label.config(text="Status: Detector OFF", fg="green")
-        self.root.after(500, lambda: self.perform_step(step_index))
+
+        # Continue snake only if not single scan
+        if not self.stop_requested:
+            self.root.after(500, lambda: self.perform_step(step_index))
 
     def set_speed(self):
         self.client.set_speed(self.speed)
