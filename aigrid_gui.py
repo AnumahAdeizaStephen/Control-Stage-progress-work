@@ -1,8 +1,6 @@
 # aigrid_gui.py
 # Python 2.7 (inside IDEAS)
 
-from aigrid_client import StageClient
-import tb_product
 from fileinput import filename
 import sys
 import Tkinter as tk
@@ -11,6 +9,8 @@ import os
 sys.path.append(
     r"C:\Users\Localadmin_adeizaan\Desktop\Test_bench\IDEASTestbench_V1_6_4_1\scripts\GDS-100")
 
+from aigrid_client import StageClient
+import tb_product
 
 # Ensure sys.argv exists for IDEAS
 if not hasattr(sys, 'argv'):
