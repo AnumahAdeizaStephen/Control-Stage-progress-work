@@ -39,6 +39,8 @@ class XYStepper:
         self.decay_constant = log(2) / (4 * 60)
         self.snake_running = False
         self.max_steps = 100.0
+        self.time_since_beginning = None
+        self.direction_at_resume = 0
 
         # Build the UI
         self.init_ui()
@@ -213,6 +215,10 @@ class XYStepper:
         self.stop_requested = False
         self.paused = False
         self.pending_action = None
+
+        self.time_since_beginning = time.time()
+        self.direction_at_resume = 0
+
         self.update_status("Snake scan started", "blue")
         self.perform_step(0)
 
@@ -265,7 +271,6 @@ class XYStepper:
 
         self.update_positions()
 
-        # Start detector after small settle delay
         self.root.after(500, lambda: self.start_detector(step_index))
 
     def stop_movement(self):
@@ -289,16 +294,35 @@ class XYStepper:
 
     def start_detector(self, step_index):
         """Start detector at current position"""
+
         if self.paused:
             self.pending_action = lambda: self.start_detector(step_index)
             return
 
+        if self.increment_time and self.time_since_beginning is not None:
+
+            half_life = -1.0 / self.decay_constant * log(0.5)
+
+            if time.time() - self.time_since_beginning > half_life:
+                print("Auto-pause at step {} (x={}, y={})".format(
+                    step_index, self.cx, self.cy))
+
+                self.paused = True
+                self.pending_action = lambda: self.start_detector(step_index)
+                return
+
         x, y = self.cx, self.cy
-        duration = self.detection_time
 
         if self.increment_time:
             duration = self.increment_detection_time(
-                self.decay_constant, self.detection_time, step_index)
+                self.decay_constant,
+                self.detection_time,
+                self.direction_at_resume
+            )
+        else:
+            duration = self.detection_time
+
+        self.direction_at_resume += 1
 
         self.log_data_nonblocking(x, y, duration, step_index)
 
@@ -310,7 +334,6 @@ class XYStepper:
         timestamp = time.strftime("%Y-%m-%d__%H_%M_%S")
         filename = 'logs/scan_x{:.3f}_y{:.3f}_{}.bin'.format(x, y, timestamp)
 
-        # EXACT same flow as original working code
         tb_product.tb.newDataLogFile(filename)
         tb_product.tb.enableDataLogging(True)
 
@@ -319,7 +342,6 @@ class XYStepper:
 
         self.status_label.config(text="Status: Detector ON", fg="blue")
 
-        # Schedule stop after duration
         self.root.after(int(duration * 1000),
                         lambda: self.finish_logging(x, y, step_index))
 
@@ -332,7 +354,6 @@ class XYStepper:
 
         self.status_label.config(text="Status: Detector OFF", fg="green")
 
-        # Continue snake only if not single scan
         if self.snake_running and not self.stop_requested:
             self.root.after(500, lambda: self.perform_step(step_index + 1))
 
