@@ -27,7 +27,7 @@ import os
 import time
 
 sys.path.append(os.getcwd() + '\\scripts\\GDS-100\\')
-tb = None
+from __main__ import tb 
 
 
 # ===============================================
