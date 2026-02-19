@@ -1,7 +1,10 @@
 # aigrid_gui.py
 # Python 2.7 (inside IDEAS)
 
+import tb_product
+from aigrid_client import StageClient
 from fileinput import filename
+from math import exp, log
 import sys
 import Tkinter as tk
 import time
@@ -9,8 +12,6 @@ import os
 sys.path.append(
     r"C:\Users\Localadmin_adeizaan\Desktop\Test_bench\IDEASTestbench_V1_6_4_1\scripts\GDS-100")
 
-from aigrid_client import StageClient
-import tb_product
 
 # Ensure sys.argv exists for IDEAS
 if not hasattr(sys, 'argv'):
@@ -35,7 +36,7 @@ class XYStepper:
         self.detection_time = 30
         self.increment_time = False
         self.speed = 10.0
-        self.decay_constant = 1.0  # Used if incrementing detection time
+        self.decay_constant = log(2) / (4 * 60)
         self.snake_running = False
         self.max_steps = 100.0
 
@@ -344,9 +345,30 @@ class XYStepper:
         self.client.disconnect()
         self.update_status("Disconnected", "red")
 
-    def increment_detection_time(self, decay_constant, base_time, step_index):
-        """Optional logic to increase detection time per step"""
-        return base_time + decay_constant * step_index
+    def increment_detection_time(self, lamda, tdet, i):
+        """
+        Exponential decay compensation.
+        lamda: decay constant
+        tdet: base detection time
+        i: scan index
+        """
+
+        t0 = 0.0                      # time before scan starts
+        td_0 = tdet + t0
+        t_move = 24.0                 # movement time between points (seconds)
+
+        t = t0
+        td = td_0
+
+        for k in range(1, i + 1):
+            t = td + t_move
+            td = (-1.0 / lamda) * log(
+                exp(-lamda * t)
+                + exp(-lamda * td_0)
+                - exp(-lamda * t0)
+            )
+
+        return td - t
 
 
 if __name__ == "__main__":
