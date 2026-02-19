@@ -36,6 +36,7 @@ class XYStepper:
         self.increment_time = False
         self.speed = 10.0
         self.decay_constant = 1.0  # Used if incrementing detection time
+        self.snake_running = False
 
         # Build the UI
         self.init_ui()
@@ -199,6 +200,7 @@ class XYStepper:
         self.update_status("Single scan running", "green")
 
     def start_movement(self):
+        self.snake_running = True
         self.stop_requested = False
         self.paused = False
         self.pending_action = None
@@ -243,6 +245,7 @@ class XYStepper:
         self.root.after(500, lambda: self.start_detector(step_index))
 
     def stop_movement(self):
+        self.snake_running = False
         self.stop_requested = True
         self.update_status("Stopped", "red")
         self.client.stop()
@@ -306,8 +309,8 @@ class XYStepper:
         self.status_label.config(text="Status: Detector OFF", fg="green")
 
         # Continue snake only if not single scan
-        if not self.stop_requested:
-            self.root.after(500, lambda: self.perform_step(step_index))
+        if self.snake_running and not self.stop_requested:
+            self.root.after(500, lambda: self.perform_step(step_index + 1))
 
     def set_speed(self):
         self.client.set_speed(self.speed)
