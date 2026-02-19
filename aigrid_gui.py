@@ -1,19 +1,18 @@
 # aigrid_gui.py
 # Python 2.7 (inside IDEAS)
 
-import tb_product as tb  # Your detector logging module
-from aigrid_client import StageClient
 import sys
 import Tkinter as tk
 import time
 import os
+sys.path.append(r"C:\Users\Localadmin_adeizaan\Desktop\Test_bench\IDEASTestbench_V1_6_4_1\scripts\GDS-100") 
+from aigrid_client import StageClient 
+import tb_product
 
 # Ensure sys.argv exists for IDEAS
 if not hasattr(sys, 'argv'):
     sys.argv = ['']
 
-# Add path to aigrid_client.py
-sys.path.append(os.getcwd())
 
 
 class XYStepper:

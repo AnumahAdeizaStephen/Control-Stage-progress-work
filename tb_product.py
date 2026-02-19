@@ -33,7 +33,7 @@ from __main__ import tb
 # ===============================================
 # Functions =====================================
 # ===============================================
-
+# let see what we have here
 # triggerAllNormal ------------------------------------
 
 # Enables or disables triggers for all normal channels.
