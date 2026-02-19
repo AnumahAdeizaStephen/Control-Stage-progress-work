@@ -1,8 +1,6 @@
 # aigrid_gui.py
 # Python 2.7 (inside IDEAS)
 
-import tb_product
-from aigrid_client import StageClient
 from fileinput import filename
 from math import exp, log
 import sys
@@ -12,6 +10,8 @@ import os
 sys.path.append(
     r"C:\Users\Localadmin_adeizaan\Desktop\Test_bench\IDEASTestbench_V1_6_4_1\scripts\GDS-100")
 
+import tb_product
+from aigrid_client import StageClient
 
 # Ensure sys.argv exists for IDEAS
 if not hasattr(sys, 'argv'):
@@ -29,7 +29,7 @@ class XYStepper:
         # Stage & scan variables
         self.cx = 0
         self.cy = 0
-        self.grid_size = 2
+        self.grid_size = 4
         self.stop_requested = False
         self.paused = False
         self.pending_action = None
