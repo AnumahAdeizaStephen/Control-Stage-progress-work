@@ -36,7 +36,7 @@ class XYStepper:
         self.detection_time = 30
         self.increment_time = False
         self.speed = 10.0
-        self.decay_constant = log(2) / (4 * 60)
+        self.decay_constant = log(2) / (1 * 60)
         self.snake_running = False
         self.max_steps = 100.0
         self.time_since_beginning = None
