@@ -1,6 +1,8 @@
 # aigrid_gui.py
 # Python 2.7 (inside IDEAS)
 
+from aigrid_client import StageClient
+import tb_product
 from fileinput import filename
 from math import exp, log
 import sys
@@ -10,8 +12,6 @@ import os
 sys.path.append(
     r"C:\Users\Localadmin_adeizaan\Desktop\Test_bench\IDEASTestbench_V1_6_4_1\scripts\GDS-100")
 
-import tb_product
-from aigrid_client import StageClient
 
 # Ensure sys.argv exists for IDEAS
 if not hasattr(sys, 'argv'):
@@ -286,11 +286,17 @@ class XYStepper:
 
     def play(self):
         if self.paused and self.pending_action:
+            print("Resuming after pause.")
             self.paused = False
+            self.time_since_beginning = time.time()
+
+            self.direction_at_resume = 0
+
             action = self.pending_action
             self.pending_action = None
-            print("Resuming scan...")
             action()
+        else:
+            print("Play pressed, but not currently paused.")
 
     def start_detector(self, step_index):
         """Start detector at current position"""
