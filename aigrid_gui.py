@@ -36,7 +36,8 @@ class XYStepper:
         self.detection_time = 30
         self.increment_time = False
         self.speed = 10.0
-        self.decay_constant = log(2) / (1 * 60)
+        # Decay constant for exponential compensation (half-life of 1 minute); 1 will be to 68 when gallium is been used.
+        self.decay_constant = log(2) / (1 * 60) 
         self.snake_running = False
         self.max_steps = 100.0
         self.time_since_beginning = None
